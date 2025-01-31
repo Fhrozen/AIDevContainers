@@ -1,0 +1,20 @@
+services:
+  janus_pro:
+    image: fhrozen/janus:latest
+    build:
+      context: .
+      dockerfile: ./dev.dockerfile
+      args:
+        - TAG=fhrozen/python
+    volumes:
+      - ./models:/root/.cache/huggingface
+      - ./app:/opt/app
+    ports:
+      - "7862:7860"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
