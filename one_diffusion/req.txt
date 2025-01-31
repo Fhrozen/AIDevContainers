@@ -1,0 +1,17 @@
+numpy
+opencv-python
+peft
+sentencepiece
+pytest
+matplotlib
+scikit-learn
+scipy
+torch
+torchvision
+einops
+jaxtyping
+diffusers==0.30.3
+git+https://github.com/facebookresearch/pytorch3d.git
+gradio
+bitsandbytes
+transformers==4.45.2
