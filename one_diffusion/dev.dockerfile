@@ -1,4 +1,4 @@
-ARG TAG
+ARG TAG="fhrozen/python"
 FROM ${TAG}:gpu-3.10
 
 WORKDIR /opt
