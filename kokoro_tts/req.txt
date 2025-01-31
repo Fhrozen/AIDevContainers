@@ -1,0 +1,16 @@
+gradio
+torch
+numpy
+scipy
+huggingface_hub>=0.25.1
+soundfile
+phonemizer==3.3.0
+regex==2024.11.6
+tiktoken==0.8.0
+transformers
+munch==4.0.0
+matplotlib
+
+# v1.0.0 dependencies
+kokoro>=0.2.1
+misaki[en]>=0.6.1
