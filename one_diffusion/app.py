@@ -1,11 +1,12 @@
 import os
+import subprocess
 import gradio as gr
 import torch
 import base64
 import io
 from PIL import Image
 from transformers import (
-    # LlavaNextProcessor, LlavaNextForConditionalGeneration,
+    LlavaNextProcessor, LlavaNextForConditionalGeneration,
     T5EncoderModel, T5Tokenizer
 )
 from transformers import (
@@ -50,34 +51,34 @@ TASK2SPECIAL_TOKENS = {
 NEGATIVE_PROMPT = "monochrome, greyscale, low-res, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation"
 
 
-# class LlavaCaptionProcessor:
-#     def __init__(self):
-#         model_name = "llava-hf/llama3-llava-next-8b-hf"
-#         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#         dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-#         self.processor = LlavaNextProcessor.from_pretrained(model_name)
-#         self.model = LlavaNextForConditionalGeneration.from_pretrained(
-#             model_name, torch_dtype=dtype, low_cpu_mem_usage=True
-#         ).to(device)
-#         self.SPECIAL_TOKENS = "assistant\n\n\n"
-# 
-#     def generate_response(self, image: Image.Image, msg: str) -> str:
-#         conversation = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": msg}]}]
-#         with torch.no_grad():
-#             prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True)
-#             inputs = self.processor(prompt, image, return_tensors="pt").to(self.model.device)
-#             output = self.model.generate(**inputs, max_new_tokens=200)
-#             response = self.processor.decode(output[0], skip_special_tokens=True)
-#         return response.split(msg)[-1].strip()[len(self.SPECIAL_TOKENS):]
-# 
-#     def process(self, images: List[Image.Image], msg: str = None) -> List[str]:
-#         if msg is None:
-#             msg = f"Describe the contents of the photo in 150 words or fewer."
-#         try:
-#             return [self.generate_response(img, msg) for img in images]
-#         except Exception as e:
-#             print(f"Error in process: {str(e)}")
-#             raise
+class LlavaCaptionProcessor:
+    def __init__(self):
+        model_name = "llava-hf/llama3-llava-next-8b-hf"
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        self.processor = LlavaNextProcessor.from_pretrained(model_name)
+        self.model = LlavaNextForConditionalGeneration.from_pretrained(
+            model_name, torch_dtype=dtype, low_cpu_mem_usage=True
+        ).to(device)
+        self.SPECIAL_TOKENS = "assistant\n\n\n"
+
+    def generate_response(self, image: Image.Image, msg: str) -> str:
+        conversation = [{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": msg}]}]
+        with torch.no_grad():
+            prompt = self.processor.apply_chat_template(conversation, add_generation_prompt=True)
+            inputs = self.processor(prompt, image, return_tensors="pt").to(self.model.device)
+            output = self.model.generate(**inputs, max_new_tokens=200)
+            response = self.processor.decode(output[0], skip_special_tokens=True)
+        return response.split(msg)[-1].strip()[len(self.SPECIAL_TOKENS):]
+
+    def process(self, images: List[Image.Image], msg: str = None) -> List[str]:
+        if msg is None:
+            msg = f"Describe the contents of the photo in 150 words or fewer."
+        try:
+            return [self.generate_response(img, msg) for img in images]
+        except Exception as e:
+            print(f"Error in process: {str(e)}")
+            raise
 
 
 class MolmoCaptionProcessor:
@@ -139,7 +140,7 @@ class PlaceHolderCaptionProcessor:
     
 def initialize_models(captioner_name):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    pipeline = OneDiffusionPipeline.from_pretrained("lehduong/OneDiffusion").to(device=device, dtype=torch.bfloat16)
+    pipeline = OneDiffusionPipeline.from_pretrained("twodgirl/onediffusion-bf16").to(device=device, dtype=torch.bfloat16)
     if captioner_name == 'molmo':
         captioner = MolmoCaptionProcessor()
     elif captioner_name == 'llava':
@@ -370,8 +371,6 @@ def update_denoise_checkboxes(images_state: List[Image.Image], task_type: str, a
 
         return gr.update(choices=labels, value=values)
     else:
-        if images_state is None:
-            images_state = []
         labels = ["image_0"] + [f"image_{i+1}" for i in range(len(images_state))]
         values = ["image_0"]
         return gr.update(choices=labels, value=values)
@@ -465,7 +464,7 @@ def get_example():
                 "./assets/examples/id_customization/chenhao/image_1.png",
                 "./assets/examples/id_customization/chenhao/image_2.png",
             ],  # Input image paths
-            "[[faceid]] [[img0]] detailed face, A woman with dark hair styled in an intricate updo, wearing a traditional orange and black outfit with elaborate gold embroidery. She has an elegant, poised expression, standing against a serene outdoor setting with classical architecture [[img1]] A young Asian woman with long dark hair and brown eyes smiles at the camera. She wears a red tank top with white flowers and green leaves. The background is blurred, with white and blue tones visible. The image has a slightly grainy quality. [[img2]] A young Asian woman in traditional attire stands against a brown background. She wears a white dress adorned with purple and green floral patterns. Her hair is styled in a bun, and she holds a small white lace umbrella with a gold handle. The image captures her elegant appearance and cultural dress. [[img3]] A woman in traditional Asian attire stands in front of a blurred building. She wears a green robe with floral designs and a black hat with lace. A man in a red robe and black hat stands behind her. The scene appears to be set in an Asian country.",
+            "[[faceid]] [[img0]]  A woman with dark hair styled in an intricate updo, wearing a traditional orange and black outfit with elaborate gold embroidery. She has an elegant, poised expression, standing against a serene outdoor setting with classical architecture [[img1]] A young Asian woman with long dark hair and brown eyes smiles at the camera. She wears a red tank top with white flowers and green leaves. The background is blurred, with white and blue tones visible. The image has a slightly grainy quality. [[img2]] A young Asian woman in traditional attire stands against a brown background. She wears a white dress adorned with purple and green floral patterns. Her hair is styled in a bun, and she holds a small white lace umbrella with a gold handle. The image captures her elegant appearance and cultural dress. [[img3]] A woman in traditional Asian attire stands in front of a blurred building. She wears a green robe with floral designs and a black hat with lace. A man in a red robe and black hat stands behind her. The scene appears to be set in an Asian country.",
             NEGATIVE_PROMPT,
             50,  # num_steps
             4.0,  # guidance_scale
@@ -507,7 +506,7 @@ def get_example():
             "Semantic to Image",  # Example name - new column
             "assets/examples/semantic_map/dragon_birds_woman.webp",  # Preview column
             ["assets/examples/semantic_map/dragon_birds_woman.webp"],  # Input image path
-            "[[semanticmap2image]] <#00ffff Cyan mask: dragon> <#ff0000 yellow mask: bird> <#800080 purple mask: woman> A woman in a red dress with gold floral patterns stands in a traditional Japanese-style building. She has black hair and wears a gold choker and earrings. Behind her, a large orange and white dragon coils around the structure. Two white birds fly near her. The building features paper windows and a wooden roof with lanterns. The scene blends traditional Japanese architecture with fantastical elements, creating a mystical atmosphere.",
+            "[[semanticmap2image]] <#00ffff Cyan mask: insert/concept/to/segment/here> A woman in a red dress with gold floral patterns stands in a traditional Japanese-style building. She has black hair and wears a gold choker and earrings. Behind her, a large orange and white dragon coils around the structure. Two white birds fly near her. The building features paper windows and a wooden roof with lanterns. The scene blends traditional Japanese architecture with fantastical elements, creating a mystical atmosphere.",
             NEGATIVE_PROMPT,
             50,  # num_steps
             4.0,  # guidance_scale
@@ -638,7 +637,7 @@ def get_example():
             50,  # num_steps
             4.0,  # guidance_scale
             ["image_0"],  # denoise_mask
-            "inpainting",  # task_type
+            "image_inpainting",  # task_type
             "0",  # azimuth
             "0",  # elevation
             "1.5",  # distance
@@ -751,7 +750,7 @@ def delete_all_images():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Start the Gradio demo with specified captioner.')
-    parser.add_argument('--captioner', type=str, choices=['molmo', 'llava', 'disable'], default='disable', help='Captioner to use: molmo, llava, disable.')
+    parser.add_argument('--captioner', type=str, choices=['molmo', 'llava', 'disable'], default='molmo', help='Captioner to use: molmo, llava, disable.')
     args = parser.parse_args()
 
     # Initialize models with the specified captioner
@@ -759,7 +758,7 @@ if __name__ == "__main__":
 
     with gr.Blocks(title="OneDiffusion Demo") as demo:
         gr.Markdown("""
-        # OneDiffusion Demo without captioner
+        # OneDiffusion Demo with (quantized) Molmo captioner
 
         **Welcome to the OneDiffusion Demo!**
 
@@ -790,7 +789,7 @@ if __name__ == "__main__":
         - For FaceID tasks: 
             + Use 3 or 4 images if single input image does not give satisfactory results.
             + All images will be resized and center cropped to the input height and width. You should choose height and width so that faces in input images won't be cropped.
-            + Model works best with close-up portrait (input and output) images. For example add some keywords such as `detailed face`, `closeup portrait`
+            + Model works best with close-up portrait (input and output) images.
             + If the model does not conform your text prompt, try using shorter caption for source image(s).
             + If you have non-human subjects and does not get satisfactory results, try "copying" part of caption of source images where it describes the properties of the subject e.g., a monster with red eyes, sharp teeth, etc.
             
@@ -829,6 +828,10 @@ if __name__ == "__main__":
                     height="auto",
                     object_fit="contain"
                 )
+
+                with gr.Row():
+                    delete_button = gr.Button("Delete Selected Images")
+                    delete_all_button = gr.Button("Delete All Images")
                 
                 task_type = gr.Dropdown(
                     choices=list(TASK2SPECIAL_TOKENS.keys()),
@@ -838,7 +841,7 @@ if __name__ == "__main__":
                 
                 captioning_message = gr.Textbox(
                     lines=2,
-                    value="Describe the contents of the photo in 40 words.",
+                    value="Describe the contents of the photo in 60 words.",
                     label="Custom message for captioner"
                 )
                 
@@ -941,6 +944,52 @@ if __name__ == "__main__":
                 selected_indices.append(evt.index)
             return selected_indices
 
+        # Connect gallery upload
+        gallery.upload(
+            fn=update_gallery_state,
+            inputs=[gallery, images_state],
+            outputs=[images_state, gallery, preview_gallery],
+            show_progress="full"
+        ).then(
+            fn=update_height_width,
+            inputs=[images_state],
+            outputs=[height, width]
+        ).then(
+            fn=update_denoise_checkboxes,
+            inputs=[images_state, task_type, azimuth, elevation, distance],
+            outputs=[denoise_mask_checkbox]
+        )
+
+        # Update delete buttons connections
+        delete_button.click(
+            fn=delete_selected_images,
+            inputs=[selected_indices_state, images_state, gallery],
+            outputs=[images_state, gallery, preview_gallery, selected_indices_state]
+        ).then(
+            fn=update_height_width,
+            inputs=[images_state],
+            outputs=[height, width]
+        ).then(
+            fn=update_denoise_checkboxes,
+            inputs=[images_state, task_type, azimuth, elevation, distance],
+            outputs=[denoise_mask_checkbox]
+        )
+
+        delete_all_button.click(
+            fn=delete_all_images,
+            inputs=[],
+            outputs=[images_state, gallery, preview_gallery, selected_indices_state]
+        ).then(
+            fn=update_denoise_checkboxes,
+            inputs=[images_state, task_type, azimuth, elevation, distance],
+            outputs=[denoise_mask_checkbox]
+        ).then(
+            fn=update_height_width,
+            inputs=[images_state],
+            outputs=[height, width]
+        )
+
+
         task_type.change(
             fn=update_denoise_checkboxes,
             inputs=[images_state, task_type, azimuth, elevation, distance],
@@ -1020,7 +1069,7 @@ if __name__ == "__main__":
                 images_state,
                 preview_gallery
             ],
-            cache_examples='lazy',
+            cache_examples=True,
             label="Examples"
         )
         
@@ -1065,7 +1114,7 @@ if __name__ == "__main__":
             examples_instance.load_from_cache = MethodType(custom_load_from_cache, examples_instance)
             
         apply_custom_load_from_cache(examples)
-        
+
         # Connect the event handler for file upload changes
         gallery.change(
             fn=update_gallery_state,
@@ -1081,6 +1130,5 @@ if __name__ == "__main__":
             inputs=[images_state, task_type, azimuth, elevation, distance],
             outputs=[denoise_mask_checkbox]
         )
-      
 
     demo.launch()
