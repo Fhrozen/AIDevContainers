@@ -1,0 +1,16 @@
+transformers>=4.38.2
+accelerate
+sentencepiece
+omegaconf
+einops
+scipy
+
+gradio
+tqdm
+tensorboard
+descript-audiotools>=0.7.2
+descript-audio-codec
+huggingface-hub
+wheel
+bitsandbytes>=0.43.3
+gguf>=0.10.0

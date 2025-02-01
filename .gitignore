@@ -175,3 +175,5 @@ cython_debug/
 *.pth
 gradio_cache
 *.whl
+yue/app/xcodec_mini_infer/
+.gradio/
