@@ -1,0 +1,20 @@
+services:
+  comfyui:
+    image: fhrozen/comfyui:latest
+    build:
+      context: .
+      dockerfile: ./dev.dockerfile
+      args:
+        - TAG=fhrozen/python
+    volumes:
+      - ./ComfyUI:/opt/app
+      - ./models:/opt/models
+    ports:
+      - "8188:8188"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: all
+            capabilities: [gpu]
