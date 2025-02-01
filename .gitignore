@@ -173,3 +173,5 @@ cython_debug/
 **/models/*
 *.pt
 *.pth
+gradio_cache
+*.whl

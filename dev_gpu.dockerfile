@@ -1,4 +1,5 @@
-FROM nvidia/cuda:12.3.1-base-ubuntu20.04
+ARG TAG_LABEL="12.3.1-base-ubuntu20.04"
+FROM nvidia/cuda:${TAG_LABEL}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
