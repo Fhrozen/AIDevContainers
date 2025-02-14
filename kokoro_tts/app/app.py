@@ -24,6 +24,7 @@ logging.getLogger('matplotlib').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.debug("Starting app initialization...")
 
+
 def initialize_model(version="v1.0.0"):
     """Initialize model and get voices"""
     global model
@@ -36,16 +37,31 @@ def initialize_model(version="v1.0.0"):
         voices = model.list_voices()
         if not voices:
             raise gr.Error("No voices found. Please check the voices directory.")
-            
+
+        no_visible = gr.update(choices=None, value=None, visible=False)
         # For v0.19, return raw list of voices
         if version == "v0.19":
-            return voices
-            
+            return voices, no_visible, no_visible
+
         # For v1.0.0, return gr.update object
         default_voice = 'af_sky' if 'af_sky' in voices else voices[0] if voices else None
-        return gr.update(choices=voices, value=default_voice)
+        if version == "v1.0.0":
+            return gr.update(choices=voices, value=default_voice), no_visible, no_visible
+
+        langs = model.list_languages()
+        models = model.list_models()
+        # For v1.0.0-onnx return
+        default_lang = langs[0] if langs else None
+        default_model = models[0] if models else None
+        return [
+            gr.update(choices=voices, value=default_voice),
+            gr.update(choices=langs, value=default_lang, visible=True),
+            gr.update(choices=models, value=default_model, visible=True)
+        ]
+        
     except Exception as e:
         raise gr.Error(f"Failed to initialize model: {str(e)}")
+
 
 def update_progress(chunk_num, total_chunks, tokens_per_sec, rtf, progress_state, start_time, gpu_timeout, progress):
     # Calculate time metrics
@@ -69,6 +85,7 @@ def update_progress(chunk_num, total_chunks, tokens_per_sec, rtf, progress_state
     # Only update progress display during processing
     progress(progress_state["progress"], desc=f"Processing chunk {chunk_num}/{total_chunks} | GPU Time Left: {int(gpu_time_left)}s")
 
+
 def generate_speech_from_ui(text, voice_names, speed, progress=gr.Progress(track_tqdm=False)):
     """Handle text-to-speech generation from the Gradio UI"""
     try:
@@ -80,7 +97,7 @@ def generate_speech_from_ui(text, voice_names, speed, progress=gr.Progress(track
         # Calculate GPU timeout based on token estimate
         tokens = count_tokens(text)
         time_estimate = math.ceil(tokens / lab_tps)
-        gpu_timeout = min(max(int(time_estimate * 1.3), 15), 120)  # Cap between 15-120s
+        gpu_timeout = min(max(int(time_estimate * 1.3), 15), 3600)
         
         # Create progress state with explicit type initialization
         progress_state = {
@@ -120,6 +137,7 @@ def generate_speech_from_ui(text, voice_names, speed, progress=gr.Progress(track
         )
     except Exception as e:
         raise gr.Error(f"Generation failed: {str(e)}")
+
 
 def create_performance_plot(metrics, voice_names):
     """Create performance plot and metrics text from generation metrics"""
@@ -184,6 +202,7 @@ def create_performance_plot(metrics, voice_names):
     )
     
     return fig, metrics_text
+
 
 # Create Gradio interface
 with gr.Blocks(title="Kokoro TTS Demo", css=styling) as demo:
@@ -413,7 +432,7 @@ with gr.Blocks(title="Kokoro TTS Demo", css=styling) as demo:
                 """)
                 version_dropdown = gr.Dropdown(
                     label="Model Version",
-                    choices=["v0.19", "v1.0.0"],
+                    choices=["v0.19", "v1.0.0", "v1.0.0-onnx"],
                     value="v1.0.0",
                     allow_custom_value=False,
                     multiselect=False
@@ -427,21 +446,65 @@ with gr.Blocks(title="Kokoro TTS Demo", css=styling) as demo:
                     multiselect=False  # Start with v1.0.0 which doesn't support multiselect
                 )
                 
+                lang_dropdown = gr.Dropdown(
+                    label="Language(s)",
+                    choices=[],
+                    value=None,
+                    allow_custom_value=True,
+                    multiselect=False,
+                    visible=False,
+                )
+                
+                model_dropdown = gr.Dropdown(
+                    label="Available models",
+                    choices=[],
+                    value=None,
+                    allow_custom_value=True,
+                    multiselect=False,
+                    visible=False,
+                )
+                
                 def on_version_change(version):
-                    voices = initialize_model(version)
+                    voices, languages, _models = initialize_model(version)
                     # For v1.0.0, voices is already a gr.update() object
                     if version == "v1.0.0":
-                        return gr.update(choices=voices.choices, value=voices.value, multiselect=False)
+                        return voices, languages, _models
+                    if version == "v1.0.0-onnx":
+                        return voices, languages, _models
                     # For v0.19, voices is a list of voice names
                     default_voice = 'af_sky' if 'af_sky' in voices else voices[0] if voices else None
-                    return gr.update(choices=voices, value=default_voice, multiselect=True)
-                
+                    return gr.update(choices=voices, value=default_voice, multiselect=True), languages, None
+
                 version_dropdown.change(
                     fn=on_version_change,
                     inputs=[version_dropdown],
-                    outputs=[voice_dropdown]
+                    outputs=[voice_dropdown, lang_dropdown, model_dropdown]
                 )
                 
+                def on_language_change(lang):
+                    try:
+                        model.set_language(lang)
+                    except AttributeError:
+                        pass
+                    return
+
+                lang_dropdown.change(
+                    fn=on_language_change,
+                    inputs=[lang_dropdown]
+                )
+
+                def on_model_change(model_id):
+                    try:
+                        model.set_model(model_id)
+                    except AttributeError:
+                        pass
+                    return
+                
+                model_dropdown.change(
+                    fn=on_model_change,
+                    inputs=[model_dropdown]
+                )
+
                 speed_slider = gr.Slider(
                     label="Speed",
                     minimum=0.5,
@@ -452,9 +515,6 @@ with gr.Blocks(title="Kokoro TTS Demo", css=styling) as demo:
 
                 submit_btn = gr.Button("Generate Speech", variant="primary")
 
-
-            
-        
         # Column 3: Output
         with gr.Column(elem_classes="equal-height"):
             audio_output = gr.Audio(
@@ -491,7 +551,7 @@ with gr.Blocks(title="Kokoro TTS Demo", css=styling) as demo:
     # Initialize voices on load with default version
     demo.load(
         fn=lambda: initialize_model("v1.0.0"),
-        outputs=[voice_dropdown]
+        outputs=[voice_dropdown, lang_dropdown, model_dropdown]
     )
 
 # Launch the app

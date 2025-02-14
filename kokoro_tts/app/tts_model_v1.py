@@ -140,8 +140,7 @@ class TTSModelV1:
             
             # Concatenate audio chunks
             audio = np.concatenate(audio_chunks)
-            
-            
+
             # Return audio and metrics
             return (
                 audio,

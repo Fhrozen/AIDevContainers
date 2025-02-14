@@ -11,8 +11,10 @@ RUN apt-get update && \
 WORKDIR /opt
 
 COPY req.txt /opt
+ENV CONDA_OVERRIDE_CUDA="12.8"
 
-RUN pip install -r req.txt && \
+RUN conda install -y conda-forge::onnxruntime=1.20.1=py310h430d77f_200_cuda  && \
+    pip install -r req.txt && \
     rm req.txt && \
     rm -rf /root/.cache/pip && \
     mkdir -p /opt/app
