@@ -14,6 +14,8 @@ Pillow
 scipy
 tqdm
 psutil
+gputil
+diffusers
 
 #non essential dependencies:
 kornia>=0.7.1

@@ -179,3 +179,4 @@ yue/app/xcodec_mini_infer/
 kokoro_tts/app/voices_v1o/
 kokoro_tts/app/models_v1o/
 .gradio/
+*.safetensors
