@@ -158,7 +158,7 @@ if in_file is None:
     st.stop()
 
 filetype = in_file.type
-filename = str(in_file.name).split(".")[0]
+filename = str(in_file.name)
 
 with col1:
     page_count = page_count(in_file)
@@ -219,7 +219,7 @@ with tempfile.TemporaryDirectory() as tmp_dir:
         temp_pdf,
         config_parser
     )
-    page_range = config_parser.generate_config_dict()["page_range"]
+    page_range = config_parser.generate_config_dict().get("page_range", None)
     first_page = page_range[0] if page_range else 0
 
 text, ext, images = text_from_rendered(rendered)
