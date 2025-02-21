@@ -227,16 +227,18 @@ with col2:
     if output_format == "markdown":
         text = markdown_insert_images(text, images)
         st.markdown(text, unsafe_allow_html=True)
-        st.sidebar.download_button(
-            label="Download converted .md",
-            data=text,
-            file_name=f"{filename}.md",
-            mime="text/md",
-        )
+        output_format = "md"
     elif output_format == "json":
         st.json(text)
-    elif output_format == "html":
+    else:
         st.html(text)
+
+st.sidebar.download_button(
+    label=f"Download converted .{output_format}",
+    data=text,
+    file_name=f"{filename}.{output_format}",
+    mime=f"text/{output_format}",
+)
 
 if output_format == "json" and show_blocks:
     with image_placeholder:
