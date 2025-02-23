@@ -5,6 +5,7 @@ WORKDIR /opt
 
 COPY req.txt /opt
 ENV FLASH_ATTENTION_SKIP_CUDA_BUILD="TRUE"
+ENV CONDA_OVERRIDE_CUDA="12.8"
 
 RUN pip install -r req.txt && \
     pip install flash-attn --no-build-isolation && \

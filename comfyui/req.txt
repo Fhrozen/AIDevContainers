@@ -8,7 +8,8 @@ transformers>=4.28.1
 tokenizers>=0.13.3
 sentencepiece
 safetensors>=0.4.2
-aiohttp
+aiohttp>=3.11.8
+yarl>=1.18.0
 pyyaml
 Pillow
 scipy
@@ -21,3 +22,32 @@ diffusers
 kornia>=0.7.1
 spandrel
 soundfile
+av
+
+
+# for process, import & export mesh 
+trimesh
+plyfile
+pygltflib
+xatlas
+pymeshlab
+gpytoolbox
+PyMCubes
+libigl
+pyvista
+pymeshfix
+igraph
+
+
+# crystools
+deepdiff
+pynvml
+py-cpuinfo
+piexif
+
+# 3d
+pyhocon
+OmegaConf
+opencv-python
+
+imageio-ffmpeg
