@@ -17,4 +17,7 @@ docker build -f dev_gpu.dockerfile -t <user>/python:gpu-3.10
 docker build -f dev_gpu.dockerfile --build-arg TAG_LABEL=12.3.1-devel-ubuntu20.04 -t <user>/python:gpu-devel-3.10
 ```
 
-then go to any directory and run `docker compose up`
+then go to any directory in `.devcontainer` and run `docker compose up`
+
+- Adding `.devcontainer` for launching debbuger containers with intermediate installation.
+
