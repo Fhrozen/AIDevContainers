@@ -5,14 +5,12 @@ WORKDIR /opt
 
 ENV CONDA_OVERRIDE_CUDA="12.8"
 
-COPY streamlit_app.py .
+COPY marker/ ./marker/
 
-RUN git clone https://github.com/VikParuchuri/marker && \
-    rm marker/marker/scripts/streamlit_app.py && \
-    cp ./streamlit_app.py marker/marker/scripts/ && \
-    cd marker && \
-    pip install . && \
-    pip install streamlit
+WORKDIR /opt/marker
+RUN pip install -e . && \
+    pip install streamlit && \
+    rm -rf marker/marker
 
 EXPOSE 8501
 WORKDIR /
