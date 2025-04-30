@@ -1,29 +1,57 @@
 import numpy as np
+import torch
 
 import streamlit as st
 from streamlit_advanced_audio import audix
 
+from tts_factory import TTSFactory
+
+
+torch.classes.__path__ = [] # add this line to manually set it to empty.
+
 
 AVAIL_MODELS = {
-    0: {"label": "kokoro-v1.0.0-onnx", "deffunc": ""}
+    0: {"label": "kokoro/v1.0.0-onnx", "deffunc": ""},
     1: {"label": "bark", "deffunc": ""}
 }
 
 
 def generate_wav():
-    value = st.session_state.text_tts
-    fa = np.random.randint(200, 800)
-    audio_array = np.sin(2 * np.pi * fa * np.linspace(0, 1, samplerate))
+    text = st.session_state.text_tts
+    if text is None or len(text) == 0:
+        return
+    model = st.session_state.get("tts_model_class", None)
+    if model is None:
+        return
+    voice_names = model.list_voices()[0]
+    speed = 1.0
+    audio_array, duration, metrics = model.generate_speech(
+        text,
+        [voice_names],
+        speed
+    )
     st.session_state.array = audio_array
-    st.write(value)
+    st.session_state.samplerate = 24000
+    # st.write(value)
+
+
+def tts_model():
+    model_idx = st.session_state.model_idx
+    model = TTSFactory.create_model(AVAIL_MODELS[model_idx]["label"])
+    model.initialize()
+    voices = model.list_voices()
+    langs = model.list_languages()
+    flavors = model.list_flavors()
+    st.session_state.tts_model_class = model
+    return
 
 
 @st.fragment
 def generate_player():
-    samplerate = st.session_state.samplerate
-    array = st.session_state.get("array", np.zeros([samplerate]))
-    with st.empty():
-        audix(array, sample_rate=samplerate)
+    samplerate = st.session_state.get("samplerate", 44100)
+    array = st.session_state.get("array", np.zeros([16000]))
+    print(samplerate)
+    audix(array, sample_rate=int(samplerate * 2.76))
 
 
 def properties_tts():
@@ -53,17 +81,22 @@ def tts_segment():
     #     "was the epoch of incredulity, it was the season of Light, it was the " + \
     #     "season of Darkness, it was the spring of hope, it was the winter of " + \
     #     "despair, (...)"
-    samplerate = 44100
-    st.session_state.samplerate = samplerate
 
     with row1_1:
         st.text_area("Enter Text", height=200, key="text_tts", label_visibility="hidden")
         generate_player()
 
     with row1_2:
-        st.selectbox("Model", range(len(AVAIL_MODELS)), format_func= x: AVAIL_MODELS[x]["label"])
+        st.selectbox(
+            "Model",
+            range(len(AVAIL_MODELS)),
+            format_func=lambda x: AVAIL_MODELS[x]["label"],
+            key="model_idx",
+            on_change=tts_model,
+            index=None
+        )
         properties_tts()
-        st.button("Clear Text Area", type="primary", on_click=generate_wav)
+        st.button("Generate Speech", type="primary", on_click=generate_wav)
 
     return
 

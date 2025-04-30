@@ -178,6 +178,8 @@ gradio_cache
 yue/app/xcodec_mini_infer/
 .devcontainer/kokoro_tts/app/voices_v1o/
 .devcontainer/kokoro_tts/app/models_v1o/
+.devcontainer/tts_framework/app/models_v1o/
+.devcontainer/tts_framework/app/voices_v1o/
 .gradio/
 *.safetensors
 
