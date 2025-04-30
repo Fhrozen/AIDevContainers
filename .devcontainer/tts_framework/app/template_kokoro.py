@@ -9,13 +9,11 @@ import logging
 import librosa
 from misaki import en, espeak, ja, zh
 import numpy as np
-from huggingface_hub import (
-    hf_hub_download,
-    snapshot_download
-)
 
 import onnxruntime
 from onnxruntime import InferenceSession
+
+from utils import download_files
 
 
 LANG_CODES = {
@@ -42,50 +40,26 @@ def get_vocab():
     return dicts
 
 
-def download_files(repo_id: str, directory: str, local_dir: str) -> None:
-    """Download voice files from Hugging Face Hub
-    
-    Args:
-        repo_id: The Hugging Face repository ID
-        directory: The directory in the repo to download (e.g. "voices")
-        local_dir: Local directory to save files to
-    """
-    os.makedirs(local_dir, exist_ok=True)
-    try:
-        print(f"Downloading voice files from {repo_id}/{directory} to {local_dir}")
-        downloaded_path = snapshot_download(
-            repo_id=repo_id,
-            repo_type="model",
-            local_dir=local_dir,
-            allow_patterns=[f"{directory}/*"],
-            local_dir_use_symlinks=False
-        )
-        print(f"Download completed to: {downloaded_path}")
-    except Exception as e:
-        print(f"Error downloading voice files: {str(e)}")
-        import traceback
-        traceback.print_exc()
-
-
 class KokoroModelV1ONNX:
     """TTS model for v1.0.0-onnx"""
     VOCAB = get_vocab()
     def __init__(self):
         self.g2p = None
-        self.voices_dir = os.path.join(os.path.dirname(__file__), "voices_v1o", "voices")
-        self.models_dir = os.path.join(os.path.dirname(__file__), "models_v1o", "onnx")
+        self.voices_dir = os.path.join(os.path.dirname(__file__), "downloaded_kkrvoices", "voices")
+        self.models_dir = os.path.join(os.path.dirname(__file__), "downloaded_kkrmodels", "onnx")
         self.repo_id = "onnx-community/Kokoro-82M-v1.0-ONNX"
         self.using_voice = None
         self.model = None
         self.lang_code = None
         self.tokenize = None
+        self.samplerate = 24000
 
     def initialize(self) -> bool:
         """Initialize"""
         try:
             print("Initializing v1.0.0 model...")
             self.g2p = None
-            self.set_model()
+            self.set_flavor()
             self.set_language()
             self.set_voice()
             print("Model initialization complete")
@@ -159,7 +133,7 @@ class KokoroModelV1ONNX:
 
         self.lang_code = code
 
-    def set_model(self, model_name: Optional[str] = None):
+    def set_flavor(self, model_name: Optional[str] = None):
         if model_name is None:
             model_name = self.list_flavors()[0]
 
