@@ -1,0 +1,23 @@
+streamlit
+torch
+numpy
+scipy
+huggingface_hub>=0.25.1
+streamlit-advanced-audio
+soundfile
+regex
+tiktoken
+transformers
+munch
+matplotlib
+
+# v1.0.0-onnx - Install by conda
+librosa
+onnx
+onnxruntime-gpu
+
+# v1.0.0 dependencies
+kokoro>=0.2.1
+misaki[en]>=0.6.1
+misaki[ja]
+misaki[zh]

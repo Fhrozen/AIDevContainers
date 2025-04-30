@@ -1,0 +1,29 @@
+{
+	"name": "TTS Framework",
+	"updateRemoteUserUID": false,
+	"image": "fhrozen/python:gpu-3.13",
+	"features": {},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			},
+			"extensions" :[
+				"ms-python.python",
+				"ms-python.vscode-pylance"
+			]
+		}
+	},
+	"postCreateCommand": "pip install -r .devcontainer/tts_framework/req.txt",
+	"runArgs": [
+		"--gpus",
+		"all",
+		"--rm",
+		"--name",
+		"tts-python-dev",
+		"--hostname",
+		"python-dev"
+	]
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
