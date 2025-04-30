@@ -1,4 +1,4 @@
-from kokoro_model_v1o import KokoroModelV1ONNX
+from template_kokoro import KokoroModelV1ONNX
 
 
 class TTSFactory:
