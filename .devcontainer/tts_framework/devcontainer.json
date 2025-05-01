@@ -15,7 +15,7 @@
 			]
 		}
 	},
-	"postCreateCommand": "pip install -r .devcontainer/tts_framework/req.txt",
+	"postCreateCommand": "bash .devcontainer/tts_framework/postcreate.sh",
 	"runArgs": [
 		"--gpus",
 		"all",

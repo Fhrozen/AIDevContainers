@@ -4,7 +4,7 @@ from huggingface_hub import (
 )
 
 
-def download_files(repo_id: str, directory: str, local_dir: str) -> None:
+def download_files(repo_id: str, directory: str, local_dir: str, pattern: str = "*") -> None:
     """Download voice files from Hugging Face Hub
     
     Args:
@@ -13,17 +13,21 @@ def download_files(repo_id: str, directory: str, local_dir: str) -> None:
         local_dir: Local directory to save files to
     """
     os.makedirs(local_dir, exist_ok=True)
+    if directory == ".":
+        _patern = pattern
+    else:
+        _patern = f"{directory}/{pattern}"
     try:
-        print(f"Downloading voice files from {repo_id}/{directory} to {local_dir}")
+        print(f"Downloading files from {repo_id}/{directory} to {local_dir}")
         downloaded_path = snapshot_download(
             repo_id=repo_id,
             repo_type="model",
             local_dir=local_dir,
-            allow_patterns=[f"{directory}/*"],
+            allow_patterns=[_patern],
             local_dir_use_symlinks=False
         )
         print(f"Download completed to: {downloaded_path}")
     except Exception as e:
-        print(f"Error downloading voice files: {str(e)}")
+        print(f"Error downloading files: {str(e)}")
         import traceback
         traceback.print_exc()

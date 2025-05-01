@@ -426,7 +426,7 @@ revealed."""
 
 
 if __name__ == "__main__":
-    tts_model = TTSModelV1ONNX()
+    tts_model = KokoroModelV1ONNX()
     tts_model.initialize()
     voices = tts_model.list_voices()
     print(tts_model.list_voices())
