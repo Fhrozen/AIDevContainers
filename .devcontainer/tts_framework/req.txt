@@ -10,14 +10,18 @@ tiktoken
 transformers
 munch
 matplotlib
+onnxslim
+# optimum@git+https://github.com/huggingface/optimum.git
 
-# v1.0.0-onnx - Install by conda
+
+# v1.0.0-onnx
 librosa
 onnx
 onnxruntime-gpu
+hf_xet
 
 # v1.0.0 dependencies
-kokoro>=0.2.1
+# kokoro>=0.2.1
 misaki[en]>=0.6.1
 misaki[ja]
 misaki[zh]

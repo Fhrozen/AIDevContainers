@@ -21,3 +21,7 @@ then go to any directory in `.devcontainer` and run `docker compose up`
 
 - Adding `.devcontainer` for launching debbuger containers with intermediate installation.
 
+
+# Pytorch Opset
+
+Number 20

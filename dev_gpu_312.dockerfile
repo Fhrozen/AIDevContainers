@@ -13,6 +13,7 @@ RUN apt-get update && \
         bc \
         build-essential \
         curl \
+        espeak-ng \
         ffmpeg \
         git \
         gnupg2 \

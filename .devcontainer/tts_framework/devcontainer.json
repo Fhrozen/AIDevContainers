@@ -1,7 +1,7 @@
 {
 	"name": "TTS Framework",
 	"updateRemoteUserUID": false,
-	"image": "fhrozen/python:gpu-3.13",
+	"image": "fhrozen/python:gpu-3.12",
 	"features": {},
 	"customizations": {
 		"vscode": {
@@ -10,7 +10,8 @@
 			},
 			"extensions" :[
 				"ms-python.python",
-				"ms-python.vscode-pylance"
+				"ms-python.vscode-pylance",
+				"donjayamanne.python-extension-pack"
 			]
 		}
 	},
