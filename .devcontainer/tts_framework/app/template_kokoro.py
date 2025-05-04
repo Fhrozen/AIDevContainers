@@ -53,6 +53,8 @@ class KokoroModelV1ONNX:
         self.lang_code = None
         self.tokenize = None
         self.samplerate = 24000
+        self.flavor = None
+        self._loaded = False
 
     def initialize(self) -> bool:
         """Initialize"""
@@ -133,10 +135,18 @@ class KokoroModelV1ONNX:
 
         self.lang_code = code
 
-    def set_flavor(self, model_name: Optional[str] = None):
-        if model_name is None:
-            model_name = self.list_flavors()[0]
+    def set_flavor(self, flavor: Optional[str] = None):
+        if flavor is None:
+            flavor = self.list_flavors()[0]
+        if flavor != self.flavor:
+            self.unload_model()
+        self.flavor = flavor
 
+    def load_model(self):
+        if self._loaded:
+            return
+        if self.flavor is None:
+            self.set_flavor()
         use_gpu = "CUDAExecutionProvider" in onnxruntime.get_available_providers()
         providers = ["CUDAExecutionProvider"] if use_gpu else []
         providers.append("CPUExecutionProvider")
@@ -144,9 +154,13 @@ class KokoroModelV1ONNX:
         sess_options = onnxruntime.SessionOptions()
         # sess_options.log_severity_level=1
         # print(providers)
-        model_path = os.path.join(self.models_dir, f"{model_name}.onnx")
+        model_path = os.path.join(self.models_dir, f"{self.flavor}.onnx")
         self.model = InferenceSession(model_path, sess_options, providers=providers)
-        # print(self.model)
+        self._loaded = True
+
+    def unload_model(self):
+        self._loaded = False
+        self.model = None
 
     def set_voice(self, voice: Optional[str] = None):
         if voice is None:
@@ -250,7 +264,7 @@ class KokoroModelV1ONNX:
             audio = audio[0]
         return audio
 
-    def generate_speech(
+    def generate(
         self,
         text: str,
         voice_names: list[str],
@@ -274,9 +288,9 @@ class KokoroModelV1ONNX:
         """
         if not text or not voice_names:
             raise ValueError("Text and voice name are required")
-
-         # Handle voice selection
-        voice_name = voice_names[0]
+        self.load_model()
+        # Handle voice selection
+        voice_name = voice_names[0] if isinstance(voice_names, list) else voice_names
 
         # Initialize tracking
         audio_chunks = []
@@ -306,7 +320,8 @@ class KokoroModelV1ONNX:
                 tokens = self.g2p(graphemes)
                 if self.lang_code.startswith("en-"):
                     tokens = tokens[1]
-
+                else:
+                    tokens = tokens[0]
                 for gs, ps, _ in self.tokenize(tokens):
                     if not ps:
                         continue
@@ -433,10 +448,11 @@ if __name__ == "__main__":
     print(tts_model.list_flavors())
     print(tts_model.list_languages())
 
-    tts_model.set_language("British English")
+    # tts_model.set_language("British English")
     # tts_model.set_language("Japanese")
     # tts_model.set_language("Spanish")
-    tts_model.generate_speech(my_text, ["jf_alpha"])
+    tts_model.generate(my_text, ["jf_alpha"])
+    # tts_model.generate(my_text, ["jf_alpha"])
     # for lang in LANG_CODES.values():
     #     print(f"setting lang {lang}")
     #     tts_model.set_language(lang)

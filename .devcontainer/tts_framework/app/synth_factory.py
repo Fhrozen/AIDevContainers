@@ -1,7 +1,8 @@
 from template_kokoro import KokoroModelV1ONNX
+from template_musicgen import MusicGenTransformers
 
 
-class TTSFactory:
+class SynthFactory:
     """Factory class to create appropriate TTS model version"""
     
     @staticmethod
@@ -19,6 +20,10 @@ class TTSFactory:
         if package == "kokoro":
             versions = {
                 "v1.0.0-onnx": KokoroModelV1ONNX
+            }
+        elif package == "musicgen":
+            versions = {
+                "small": MusicGenTransformers
             }
         else:
             raise ValueError(f"Unsupported model: {package}")

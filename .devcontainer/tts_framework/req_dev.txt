@@ -11,11 +11,11 @@ transformers
 munch
 matplotlib
 sentencepiece==0.2.0
-# onnxslim
+onnxslim
+accelerate
 # optimum@git+https://github.com/huggingface/optimum.git
 
-# accelerate
-# blobfile
+
 # v1.0.0-onnx
 librosa
 onnx

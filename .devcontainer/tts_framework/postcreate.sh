@@ -1,6 +1,7 @@
 #!/bin/bash
 
-pip install -r .devcontainer/tts_framework/req.txt
+pip install -r .devcontainer/tts_framework/req_dev.txt
+pip install -e ./optimum_code
 
 # Detect the Python site-packages version.
 PY_SITEPKG_VER="$(python --version | sed -E 's,^[^0-9]*?([0-9]+\.[0-9]+).*$,\1,')"
