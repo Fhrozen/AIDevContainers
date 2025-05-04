@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 
-docker run -it --rm --name test-image --hostname container fhrozen/python:gpu-3.12
+name=$(basename ${PWD})
+
+echo "Launching container"
+
+docker run -it --rm --gpus all \
+    -v ${PWD}:/workspaces/${name} \
+    --name test-image \
+    --hostname container fhrozen/python:gpu-3.12
