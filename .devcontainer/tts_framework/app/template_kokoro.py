@@ -10,8 +10,7 @@ import librosa
 from misaki import en, espeak, ja, zh
 import numpy as np
 
-import onnxruntime
-from onnxruntime import InferenceSession
+import onnxruntime as ort
 
 from utils import download_files
 
@@ -147,15 +146,15 @@ class KokoroModelV1ONNX:
             return
         if self.flavor is None:
             self.set_flavor()
-        use_gpu = "CUDAExecutionProvider" in onnxruntime.get_available_providers()
+        use_gpu = "CUDAExecutionProvider" in ort.get_available_providers()
         providers = ["CUDAExecutionProvider"] if use_gpu else []
         providers.append("CPUExecutionProvider")
 
-        sess_options = onnxruntime.SessionOptions()
+        sess_options = ort.SessionOptions()
         # sess_options.log_severity_level=1
         # print(providers)
         model_path = os.path.join(self.models_dir, f"{self.flavor}.onnx")
-        self.model = InferenceSession(model_path, sess_options, providers=providers)
+        self.model = ort.InferenceSession(model_path, sess_options, providers=providers)
         self._loaded = True
 
     def unload_model(self):
