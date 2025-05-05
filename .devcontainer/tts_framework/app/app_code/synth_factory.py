@@ -1,5 +1,7 @@
-from template_kokoro import KokoroModelV1ONNX
-from template_musicgen import MusicGenTransformers
+from .template import (
+    KokoroTTSV1ONNX,
+    MusicGenTransformers
+)
 
 
 class SynthFactory:
@@ -19,7 +21,7 @@ class SynthFactory:
         versions = {}
         if package == "kokoro":
             versions = {
-                "v1.0.0-onnx": KokoroModelV1ONNX
+                "v1.0.0-onnx": KokoroTTSV1ONNX
             }
         elif package == "musicgen":
             versions = {

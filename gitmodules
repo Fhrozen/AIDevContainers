@@ -1,9 +1,0 @@
-[submodule "comfyui/ComfyUI"]
-	path = comfyui/ComfyUI
-	url = https://github.com/comfyanonymous/ComfyUI
-[submodule "hunyuan3d/Hunyuan3D-2GP"]
-	path = hunyuan3d/Hunyuan3D-2GP
-	url = https://github.com/deepbeepmeep/Hunyuan3D-2GP
-[submodule "hunyuan3d/Hunyuan3D-2"]
-	path = hunyuan3d/Hunyuan3D-2
-	url = https://github.com/Tencent/Hunyuan3D-2

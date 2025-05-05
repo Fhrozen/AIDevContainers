@@ -177,7 +177,7 @@ gradio_cache
 *.whl
 yue/app/xcodec_mini_infer/
 .devcontainer/kokoro_tts/app/downloaded*
-.devcontainer/tts_framework/app/downloaded*
+.devcontainer/tts_framework/downloaded*
 dwn_quants
 .gradio/
 *.safetensors
