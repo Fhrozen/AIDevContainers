@@ -12,7 +12,7 @@ import numpy as np
 
 import onnxruntime as ort
 
-from utils import download_files
+from .utils import download_files
 
 
 LANG_CODES = {
@@ -43,23 +43,26 @@ class KokoroModelV1ONNX:
     """TTS model for v1.0.0-onnx"""
     VOCAB = get_vocab()
     def __init__(self):
+        dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
         self.g2p = None
-        self.voices_dir = os.path.join(os.path.dirname(__file__), "downloaded_kkrvoices", "voices")
-        self.models_dir = os.path.join(os.path.dirname(__file__), "downloaded_kkrmodels", "onnx")
+        self.working_dir = os.path.join(dirname, "downloaded", "kokoro")
         self.repo_id = "onnx-community/Kokoro-82M-v1.0-ONNX"
-        self.using_voice = None
-        self.model = None
-        self.lang_code = None
-        self.tokenize = None
-        self.samplerate = 24000
-        self.flavor = None
-        self._loaded = False
+        args = {
+            "g2p": None,
+            "using_voice": None,
+            "model": None,
+            "lang_code": None,
+            "tokenize": None,
+            "samplerate": 24000,
+            "flavor": None,
+            "_loaded": None,
+        }
+        _ = [setattr(self, k, v) for k, v in args.items()]
 
     def initialize(self) -> bool:
         """Initialize"""
         try:
             print("Initializing v1.0.0 model...")
-            self.g2p = None
             self.set_flavor()
             self.set_language()
             self.set_voice()
@@ -71,16 +74,16 @@ class KokoroModelV1ONNX:
 
     def list_voices(self) -> List[str]:
         """List available voices from voices_v1 directory"""
-        _voices_dir = os.path.dirname(self.voices_dir)
-        check_fn = os.path.join(_voices_dir, ".done")
+        voices_dir = os.path.join(self.working_dir, "voices")
+        check_fn = os.path.join(voices_dir, ".done")
         if not os.path.exists(check_fn):
-            download_files(self.repo_id, "voices", _voices_dir)
+            download_files(self.repo_id, "voices", self.working_dir)
             with open(check_fn, "w") as writer:
                 writer.write("\n")
 
         voices = []
-        if os.path.exists(self.voices_dir):
-            listfiles = glob.glob(os.path.join(self.voices_dir, "*.bin"))
+        if os.path.exists(voices_dir):
+            listfiles = glob.glob(os.path.join(voices_dir, "*.bin"))
             for filename in listfiles:
                 voice_name = filename.split(".bin")[0]
                 voices.append(os.path.basename(voice_name))
@@ -93,16 +96,16 @@ class KokoroModelV1ONNX:
 
     def list_flavors(self) -> List[str]:
         """List available models from voices_v1 directory"""
-        _models_dir = os.path.dirname(self.models_dir)
-        check_fn = os.path.join(_models_dir, ".done")
+        models_dir = os.path.join(self.working_dir, "onnx")
+        check_fn = os.path.join(self.working_dir, "onnx", ".done")
         if not os.path.exists(check_fn):
-            download_files(self.repo_id, "onnx", _models_dir)
+            download_files(self.repo_id, "onnx", self.working_dir)
             with open(check_fn, "w") as writer:
                 writer.write("\n")
 
         models = []
-        if os.path.exists(self.models_dir):
-            listfiles = glob.glob(os.path.join(self.models_dir, "*.onnx"))
+        if os.path.exists(models_dir):
+            listfiles = glob.glob(os.path.join(models_dir, "*.onnx"))
             for filename in listfiles:
                 model_name = filename.split(".onnx")[0]
                 models.append(os.path.basename(model_name))

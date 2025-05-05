@@ -406,6 +406,7 @@ def main():
     os.makedirs(os.path.join(output_model_folder, 'onnx'), exist_ok=True)
 
     if not conv_args.skip_onnxslim:
+        print("Starting to slim")
         onnx_models = [os.path.join(output_model_folder, x)
                     for x in os.listdir(output_model_folder) if x.endswith('.onnx')]
 
@@ -418,6 +419,7 @@ def main():
 
     # Step 2. (optional, recommended) quantize the converted model for fast inference and to reduce model size.
     if conv_args.quantize:
+        print("Starting to quantize")
 
         # Possibly update quantize config with model specific defaults
         use_per_channel_reduce_range = config.model_type not in NO_PER_CHANNEL_REDUCE_RANGE_MODELS

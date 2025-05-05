@@ -7,7 +7,9 @@ streamlit-advanced-audio
 soundfile
 regex
 tiktoken
-transformers
+# transformers
+onnxruntime-genai@git+https://github.com/microsoft/onnxruntime-genai.git
+tokenizers
 munch
 matplotlib
 sentencepiece==0.2.0

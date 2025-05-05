@@ -11,7 +11,7 @@ import torch
 import streamlit as st
 from streamlit_advanced_audio import audix
 
-from synth_factory import SynthFactory
+from app_code import SynthFactory
 
 
 torch.classes.__path__ = [] # add this line to manually set it to empty.

@@ -25,6 +25,7 @@ class MusicGenTransformers:
     """MusicGen model for onnx"""
 
     def __init__(self):
+        dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         self.models_dir = os.path.join(os.path.dirname(__file__), "downloaded_mgmodels", "onnx")
         self.configs_dir = os.path.join(os.path.dirname(__file__), "downloaded_mgconfigs")
         self.repo_id = "xenova/musicgen-small"
