@@ -12,7 +12,8 @@ import numpy as np
 
 import onnxruntime as ort
 
-from .utils import download_files
+from .base import SynthesizerBase
+from .utils.common import download_files
 
 
 LANG_CODES = {
@@ -39,23 +40,18 @@ def get_vocab():
     return dicts
 
 
-class KokoroModelV1ONNX:
+class KokoroTTSV1ONNX(SynthesizerBase):
     """TTS model for v1.0.0-onnx"""
     VOCAB = get_vocab()
+
     def __init__(self):
-        dirname = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-        self.g2p = None
-        self.working_dir = os.path.join(dirname, "downloaded", "kokoro")
+        self.working_dir = os.path.join(self.dirpath, "kokoro")
         self.repo_id = "onnx-community/Kokoro-82M-v1.0-ONNX"
         args = {
             "g2p": None,
-            "using_voice": None,
-            "model": None,
             "lang_code": None,
             "tokenize": None,
             "samplerate": 24000,
-            "flavor": None,
-            "_loaded": None,
         }
         _ = [setattr(self, k, v) for k, v in args.items()]
 
@@ -117,6 +113,8 @@ class KokoroModelV1ONNX:
         else:
             _codes = {v:k for k, v in LANG_CODES.items()}
             code = _codes[langid]
+        if code == self.lang_code:
+            return
 
         self.tokenize = self.extra_tokenize
         if code.startswith("en-"):
@@ -140,14 +138,15 @@ class KokoroModelV1ONNX:
     def set_flavor(self, flavor: Optional[str] = None):
         if flavor is None:
             flavor = self.list_flavors()[0]
-        if flavor != self.flavor:
-            self.unload_model()
-        self.flavor = flavor
+        if flavor == self._flavor:
+            return
+        self.unload_model()
+        self._flavor = flavor
 
     def load_model(self):
         if self._loaded:
             return
-        if self.flavor is None:
+        if self._flavor is None:
             self.set_flavor()
         use_gpu = "CUDAExecutionProvider" in ort.get_available_providers()
         providers = ["CUDAExecutionProvider"] if use_gpu else []
@@ -156,7 +155,7 @@ class KokoroModelV1ONNX:
         sess_options = ort.SessionOptions()
         # sess_options.log_severity_level=1
         # print(providers)
-        model_path = os.path.join(self.models_dir, f"{self.flavor}.onnx")
+        model_path = os.path.join(self.working_dir, "onnx", f"{self._flavor}.onnx")
         self.model = ort.InferenceSession(model_path, sess_options, providers=providers)
         self._loaded = True
 
@@ -168,9 +167,24 @@ class KokoroModelV1ONNX:
         if voice is None:
             voice = self.list_voices()[0]
         self.voice = np.fromfile(
-            os.path.join(self.voices_dir, f"{voice}.bin"),
+            os.path.join(self.working_dir, "voices", f"{voice}.bin"),
             dtype=np.float32
         ).reshape(-1, 1, 256)
+
+    def gen_args(self, only_values: bool = False):
+        keys = ["flavor", "voice", "language", "speed"]
+        types = ["selectbox", "selectbox", "selectbox", "slider"]
+        labels = ["Model Flavor", "Voices", "Language", "Speed"]
+        values = [0, 0, 0, 1.0]
+        kwargs = [
+            {"options": self.list_flavors()},
+            {"options": self.list_voices()},
+            {"options": self.list_languages()},
+            {"min_value": 0.5, "max_value": 2.0, "step": 0.1}
+        ]
+        if only_values:
+            return keys, values
+        return keys, values, labels, types, kwargs
 
     @classmethod
     def waterfall_last(
@@ -266,10 +280,12 @@ class KokoroModelV1ONNX:
             audio = audio[0]
         return audio
 
-    def generate(
+    def _generate(
         self,
         text: str,
-        voice_names: list[str],
+        voice: str | None = None,
+        flavor: str | None = None,
+        language: str | None = None,
         speed: float = 1.0,
         gpu_timeout: int = 60,
         progress_callback=None,
@@ -288,11 +304,14 @@ class KokoroModelV1ONNX:
             progress_state: Dictionary tracking generation progress metrics
             progress: Progress callback from Gradio
         """
-        if not text or not voice_names:
+        print(text)
+        print(voice)
+        if not text or not voice:
             raise ValueError("Text and voice name are required")
+        self.set_flavor(flavor)
+        self.set_language(language)
         self.load_model()
         # Handle voice selection
-        voice_name = voice_names[0] if isinstance(voice_names, list) else voice_names
 
         # Initialize tracking
         audio_chunks = []
@@ -308,7 +327,7 @@ class KokoroModelV1ONNX:
                 paragraph.replace('\n', ' ').replace('  ', ' ').strip()
                 for paragraph in text.split('\n\n')
             )
-            self.set_voice(voice_name)
+            self.set_voice(voice)
 
             if isinstance(processed_text, str):
                 processed_text = re.split(split_pattern, processed_text.strip()) if split_pattern else [processed_text]
@@ -442,9 +461,10 @@ revealed."""
 # という設定になっている."""
 
 
-if __name__ == "__main__":
-    tts_model = KokoroModelV1ONNX()
+def main():
+    tts_model = KokoroTTSV1ONNX()
     tts_model.initialize()
+    tts_model._name = "test"
     voices = tts_model.list_voices()
     print(tts_model.list_voices())
     print(tts_model.list_flavors())
@@ -453,9 +473,18 @@ if __name__ == "__main__":
     # tts_model.set_language("British English")
     # tts_model.set_language("Japanese")
     # tts_model.set_language("Spanish")
-    tts_model.generate(my_text, ["jf_alpha"])
+    tts_model.generate(
+        my_text,
+        voice="jf_alpha",
+        language="British English",
+        flavor="model_q4"
+    )
     # tts_model.generate(my_text, ["jf_alpha"])
     # for lang in LANG_CODES.values():
     #     print(f"setting lang {lang}")
     #     tts_model.set_language(lang)
     #     time.sleep(2)
+
+
+if __name__ == "__main__":
+    main()
