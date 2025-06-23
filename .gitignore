@@ -186,4 +186,7 @@ comfyui/ComfyUI
 marker/marker
 
 optimum_code
+transformer_code
 /*.wav
+librechat
+lobe_chat
