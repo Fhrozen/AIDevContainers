@@ -6,11 +6,12 @@ from typing import List, Optional, Tuple
 import torch
 import numpy as np
 import onnxruntime as ort
-from utils import download_files
-from transformers import AutoTokenizer, PretrainedConfig
+from transformers import AutoTokenizer, PretrainedConfig, GenerationConfig
 import soundfile as sf
 
 from optimum.onnxruntime import ORTModelForCausalLM
+from .utils.common import download_files
+from .utils.orpheus import parse_output, redistribute_codes
 
 
 LANG_CODES = {
@@ -18,61 +19,13 @@ LANG_CODES = {
 }
 
 
-def parse_output(generated_ids):
-    token_to_find = 128257
-    token_to_remove = 128258
-    
-    token_indices = (generated_ids == token_to_find).nonzero(as_tuple=True)
-
-    if len(token_indices[1]) > 0:
-        last_occurrence_idx = token_indices[1][-1].item()
-        cropped_tensor = generated_ids[:, last_occurrence_idx+1:]
-    else:
-        cropped_tensor = generated_ids
-
-    processed_rows = []
-    for row in cropped_tensor:
-        masked_row = row[row != token_to_remove]
-        processed_rows.append(masked_row)
-
-    code_lists = []
-    for row in processed_rows:
-        row_length = row.size(0)
-        new_length = (row_length // 7) * 7
-        trimmed_row = row[:new_length]
-        trimmed_row = [t - 128266 for t in trimmed_row]
-        code_lists.append(trimmed_row)
-    return torch.tensor(code_lists[0]).cpu().numpy()  # Return just the first one for single sample
-
-
-# Redistribute codes for audio generation
-def redistribute_codes(code_list):
-    layer_1 = []
-    layer_2 = []
-    layer_3 = []
-    for i in range((len(code_list)+1)//7):
-        layer_1.append(code_list[7*i])
-        layer_2.append(code_list[7*i+1]-4096)
-        layer_3.append(code_list[7*i+2]-(2*4096))
-        layer_3.append(code_list[7*i+3]-(3*4096))
-        layer_2.append(code_list[7*i+4]-(4*4096))
-        layer_3.append(code_list[7*i+5]-(5*4096))
-        layer_3.append(code_list[7*i+6]-(6*4096))
-        
-    layer_1 = np.array(layer_1)[None]
-    layer_2 = np.array(layer_2)[None]
-    layer_3 = np.array(layer_3)[None]
-    return {
-        "audio_codes.0": layer_1,
-        "audio_codes.1": layer_2,
-        "audio_codes.2": layer_3,
-    }
-
-
-class OrpheusTTSModelONNX:
+class OrpheusTTSONNX:
     def __init__(self):
-        self.models_dir = os.path.join(os.path.dirname(__file__), "downloaded_orpheus", "onnx")
-        self.codec_dir = os.path.join(os.path.dirname(__file__), "downloaded_orpheus/codec", "onnx")
+        self.dirpath = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "downloaded")
+        )
+        self.models_dir = os.path.join(self.dirpath, "downloaded_orpheus", "onnx")
+        self.codec_dir = os.path.join(self.dirpath, "downloaded_orpheus/codec", "onnx")
         self.repo_id = "onnx-community/orpheus-3b-0.1-ft-ONNX"
         self.codec_id = "onnx-community/snac_24khz-ONNX"
         _vars = {
@@ -173,11 +126,20 @@ class OrpheusTTSModelONNX:
         # print(providers)
         model_path = os.path.join(self.models_dir, f"{self.flavor}.onnx")
         model = ort.InferenceSession(model_path, sess_options, providers=providers)
+        
+        # with open(os.path.join(
+        #     self.dirpath,
+        #     "downloaded_orpheus",
+        #     "generation_config.json"
+        # ), "r", encoding="utf-8") as reader:
+        #     gen_cfg = GenerationConfig(**json.load(reader))
+            
         self.model = ORTModelForCausalLM(
             model,
             self.config,
             use_io_binding=True,
             use_cache=True,
+            # generation_config=gen_cfg
         )
         
         codec_path = os.path.join(self.codec_dir, "decoder_model.onnx")
@@ -191,7 +153,10 @@ class OrpheusTTSModelONNX:
     def _format_promt(self, prompt, voice="zoe"):
         adapated_prompt = f"{voice}: {prompt}"
         tokens = self.tokenizer(adapated_prompt, return_tensors="np").input_ids[0]
+        print(tokens)
         tokens = np.concat([[128259], tokens, [128009, 128260]], axis=0)[None]
+        print(tokens)
+        # exit(1)
         tokens = torch.from_numpy(tokens).to(device="cuda")
         return tokens, torch.ones_like(tokens)
 
@@ -272,16 +237,20 @@ real to him. Things of which he had never dreamed were gradually
 revealed."""
 
 
-
-if __name__ == "__main__":
-    tts_model = OrpheusTTSModelONNX()
+def _main():
+    tts_model = OrpheusTTSONNX()
     tts_model.initialize()
     voices = tts_model.list_voices()
     print(tts_model.list_voices())
     print(tts_model.list_flavors())
     print(tts_model.list_languages())
-    output = tts_model.generate(my_text, "zoe")
+    _text = "Man, the way social media has, um, completely changed how we interact is."
+    output = tts_model.generate(_text, "zoe")
     sf.write("test_orpheus.wav", output, tts_model.samplerate)
+
+
+if __name__ == "__main__":
+    _main()
 
     # tts_model.set_language("British English")
     # tts_model.set_language("Japanese")

@@ -184,6 +184,7 @@ dwn_quants
 
 comfyui/ComfyUI
 marker/marker
+python_apps/**/*.wav
 
 optimum_code
 transformer_code

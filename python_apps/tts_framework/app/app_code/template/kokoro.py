@@ -55,18 +55,11 @@ class KokoroTTSV1ONNX(SynthesizerBase):
         }
         _ = [setattr(self, k, v) for k, v in args.items()]
 
-    def initialize(self) -> bool:
+    def _initialize(self) -> bool:
         """Initialize"""
-        try:
-            print("Initializing v1.0.0 model...")
-            self.set_flavor()
-            self.set_language()
-            self.set_voice()
-            print("Model initialization complete")
-            return True
-        except Exception as e:
-            print(f"Error initializing model: {str(e)}")
-            return False
+        self.set_flavor()
+        self.set_language()
+        self.set_voice()
 
     def list_voices(self) -> List[str]:
         """List available voices from voices_v1 directory"""
@@ -159,10 +152,6 @@ class KokoroTTSV1ONNX(SynthesizerBase):
         self.model = ort.InferenceSession(model_path, sess_options, providers=providers)
         self._loaded = True
 
-    def unload_model(self):
-        self._loaded = False
-        self.model = None
-
     def set_voice(self, voice: Optional[str] = None):
         if voice is None:
             voice = self.list_voices()[0]
@@ -171,20 +160,20 @@ class KokoroTTSV1ONNX(SynthesizerBase):
             dtype=np.float32
         ).reshape(-1, 1, 256)
 
-    def gen_args(self, only_values: bool = False):
-        keys = ["flavor", "voice", "language", "speed"]
-        types = ["selectbox", "selectbox", "selectbox", "slider"]
-        labels = ["Model Flavor", "Voices", "Language", "Speed"]
-        values = [0, 0, 0, 1.0]
-        kwargs = [
-            {"options": self.list_flavors()},
-            {"options": self.list_voices()},
-            {"options": self.list_languages()},
-            {"min_value": 0.5, "max_value": 2.0, "step": 0.1}
+    def gen_args(self):
+        self._keys = ["duration", "guidance", "use_sampling"]
+        self._types = ["slider", "slider", "toogle"]
+        self._labels = [
+            "Duration",
+            "Guidance scale",
+            "Use Sampling"
         ]
-        if only_values:
-            return keys, values
-        return keys, values, labels, types, kwargs
+        self._values = [10, 3, True]
+        self._kwargs = [
+            {"min_value": 1, "max_value": 30, "step": 1},
+            {"min_value": 1, "max_value": 30, "step": 1},
+            {}
+        ]
 
     @classmethod
     def waterfall_last(
