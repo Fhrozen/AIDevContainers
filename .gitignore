@@ -184,6 +184,7 @@ dwn_quants
 
 comfyui/ComfyUI
 marker/marker
+models_converted/
 python_apps/**/*.wav
 
 optimum_code
