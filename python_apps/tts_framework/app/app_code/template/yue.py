@@ -2,6 +2,7 @@ import glob
 import json
 import os
 from typing import List, Optional, Tuple
+import re
 
 from numba import cuda
 import numpy as np
@@ -22,6 +23,13 @@ LANG_CODES = {
     "jp": "Japanese",
     "kr": "Korean"
 }
+
+
+def split_lyrics(lyrics: str):
+    pattern = r"\[(\w+)\]\s*(.*?)(?=\s*\n\[|\Z)"
+    segments = re.findall(pattern, lyrics, re.DOTALL)
+    structured_lyrics = [f"[{seg[0]}]\n{seg[1].strip()}\n\n" for seg in segments]
+    return structured_lyrics
 
 
 class YueTTSONNX(SynthesizerBase):
@@ -156,9 +164,12 @@ class YueTTSONNX(SynthesizerBase):
             use_io_binding=True,
             use_cache=True,
         )
-        # codec_path = os.path.join(self.codec_dir, "decoder_model.onnx")
-        # self.codec = ort.InferenceSession(codec_path, sess_options, providers=providers)
+
         self._loaded = True
+        
+        self.mmtokenizer = MMSentencePieceTokenizer(os.path.join(
+            self.working_dir + f".s1_{_lang_code}", "tokenizer.model")
+        )
 
     def _format_promt(self, prompt, voice="zoe"):
         adapated_prompt = f"{voice}: {prompt}"
@@ -197,7 +208,23 @@ class YueTTSONNX(SynthesizerBase):
         """
 
         self.load_model()
+        run_n_segments = 2
+        max_new_tokens = 45
+        max_new_tokens = int(max_new_tokens * (100/run_n_segments))
+        
+        genres = text.strip()
+        lyrics = split_lyrics(lyrics + "\n")
+        full_lyrics = "\n".join(lyrics)
+        prompt_texts = [f"Generate music from the given lyrics segment by segment.\n[Genre] {genres}\n{full_lyrics}"]
+        prompt_texts += lyrics
+        
+        top_p = 0.93
+        temperature = 1.0
+        repetition_penalty = 1.2
+        start_of_segment = self.mmtokenizer.tokenize('[start_of_segment]')
+        end_of_segment = self.mmtokenizer.tokenize('[end_of_segment]')
 
+        print(start_of_segment)
         # Initialize tracking
         # text = text.replace("\n", " ")
         # # Process by utterance instead of paragraph
@@ -251,15 +278,15 @@ I won't let you slip away from me
 """
 
 
-def main():
+def _main():
     tts_model = YueTTSONNX()
     tts_model.initialize()
     print(tts_model.list_flavors())
     print(tts_model.list_languages())
     tts_model.set_flavor()
-    output = tts_model.generate(my_text)
+    output = tts_model.generate(my_text, lyrics=my_lyrics)
     # sf.write("test_yue.wav", output, tts_model.samplerate)
 
 
 if __name__ == "__main__":
-    main()
+    _main()

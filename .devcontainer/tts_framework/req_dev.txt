@@ -15,7 +15,8 @@ onnxslim
 accelerate
 # optimum@git+https://github.com/huggingface/optimum.git
 onnx_ir
-
+optimum
+einops
 
 # v1.0.0-onnx
 librosa
@@ -28,3 +29,6 @@ hf_xet
 misaki[en]>=0.6.1
 misaki[ja]
 misaki[zh]
+
+# others
+flask

@@ -5,4 +5,4 @@ import app_code.template.orpheus as orpheus
 
 
 if __name__ == "__main__":
-    orpheus._main()
+    yue._main()

@@ -182,8 +182,12 @@ dwn_quants
 .gradio/
 *.safetensors
 
+YuE-music-generator-demo/
+yue_demo/
+yue_code/
 comfyui/ComfyUI
 marker/marker
+downloaded/
 models_converted/
 python_apps/**/*.wav
 
