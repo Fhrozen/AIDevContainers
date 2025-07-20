@@ -17,10 +17,14 @@ accelerate
 onnx_ir
 optimum
 einops
+omegaconf
+# descript-audio-codec
+bitsandbytes
 
 # v1.0.0-onnx
 librosa
 onnx
+onnxscript
 onnxruntime-gpu
 hf_xet
 

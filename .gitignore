@@ -196,3 +196,6 @@ transformer_code
 /*.wav
 librechat
 lobe_chat
+temp/
+pyscripts/*.wav
+fairseq/

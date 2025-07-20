@@ -282,6 +282,7 @@ class KokoroTTSV1ONNX(SynthesizerBase):
         progress=None,
         split_pattern=r'\n\n+',
         trim=True,
+        **kwargs
     ) -> Tuple[np.ndarray, float]:
         """Generate speech from text using KPipeline
         
@@ -450,7 +451,7 @@ revealed."""
 # という設定になっている."""
 
 
-def main():
+def _main():
     tts_model = KokoroTTSV1ONNX()
     tts_model.initialize()
     tts_model._name = "test"
@@ -476,4 +477,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()
