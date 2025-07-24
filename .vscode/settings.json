@@ -11,5 +11,8 @@
         "**/data": true,
         "**/mlruns": true,
         "**/dump": true
-    }
+    },
+    "python.analysis.extraPaths": [
+        "./pyscripts/optimum_code"
+    ]
 }
