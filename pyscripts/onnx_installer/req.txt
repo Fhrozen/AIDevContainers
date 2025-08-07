@@ -1,5 +1,6 @@
-optimum-onnx@git+https://github.com/huggingface/optimum-onnx.git
 onnx
+onnxslim
 onnxruntime-gpu
 tokenizers
 huggingface-hub
+onnxruntime-genai-cuda
