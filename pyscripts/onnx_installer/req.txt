@@ -1,0 +1,5 @@
+optimum-onnx@git+https://github.com/huggingface/optimum-onnx.git
+onnx
+onnxruntime-gpu
+tokenizers
+huggingface-hub

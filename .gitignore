@@ -200,3 +200,5 @@ temp/
 pyscripts/*.wav
 fairseq/
 onnx_export_*.md
+Miniforge3*
+activate_python*
