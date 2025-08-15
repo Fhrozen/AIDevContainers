@@ -5,10 +5,10 @@ services:
       context: .
       dockerfile: ./dev.dockerfile
       args:
-        - TAG=fhrozen/python
+        - TAG=fhrozen/python-root
     volumes:
       - ./models:/root/.cache/huggingface
-      - ./marker/marker:/opt/marker/marker
+      - ./marker/marker:/workspaces/marker/marker
     ports:
       - "8501:8501"
     deploy:
