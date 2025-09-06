@@ -36,3 +36,4 @@ misaki[zh]
 
 # others
 flask
+pysbd@git+https://github.com/nipunsadvilkar/pySBD.git
