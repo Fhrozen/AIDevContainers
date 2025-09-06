@@ -15,4 +15,4 @@ RUN git clone https://github.com/microsoft/VibeVoice && \
 WORKDIR /workspace/VibeVoice/demo
 ENV GRADIO_SERVER_NAME=0.0.0.0
 EXPOSE 7860
-ENTRYPOINT [ "python", "gradio_demo.py", "--model_path", "microsoft/VibeVoice-1.5B", "--share"]
+ENTRYPOINT [ "python", "gradio_demo.py", "--model_path", "microsoft/VibeVoice-1.5B"]
