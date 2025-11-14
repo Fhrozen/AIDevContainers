@@ -165,13 +165,15 @@ def main():
     )
 
     # Process the prompt and clone_voice
+    text = args.text
+    text = "Some keyword arguments were passed to the ORTModelForCausalLM constructor that are not part of its signature: use_cache. These arguments will be ignored in the current version and will raise an error in the next version."
     if args.clone_voice:
         raise NotImplementedError()
         print(f"Using voice clone: {args.clone_voice}")
         prompt, global_tokens = process_prompt(args.text, args.clone_voice, args.prompt)
     else:
         print(f"Using {args.gender_voice} voice ")
-        prompt = process_prompt_control(args.gender_voice, args.pitch, args.speed, args.text)
+        prompt = process_prompt_control(args.gender_voice, args.pitch, args.speed, text)
 
     print(f"Using prompt: {prompt}")
     inputs = tokenizer([prompt], return_tensors="pt")
@@ -205,8 +207,8 @@ def main():
     wav = audio_detokenizer.run(
         ["audio"],
         {"semantic_tokens": semantic_tokens, "global_tokens": global_token}
-    )
-    print(wav.shape)
+    )[0]
+    sf.write("test_spark.wav", wav[0, 0], 16000)
     return
 
 
